@@ -3,7 +3,7 @@
    Estrategia: cache-first para el app shell y los recursos
    propios; red como respaldo y offline.html como último recurso.
    ============================================================ */
-const VERSION = 'v1.0.0';
+const VERSION = 'v1.1.0';
 const CACHE_NAME = 'calc-bjt-' + VERSION;
 
 /* App shell completo: HTML, manifiesto, MathJax local, iconos y
@@ -77,6 +77,10 @@ self.addEventListener('activate', (event) => {
 /* ---------- Mensajes desde la página ---------- */
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
+  // Chip de versión: la página pide la versión actual de la app
+  if (event.data && event.data.type === 'GET_VERSION' && event.ports[0]) {
+    event.ports[0].postMessage({ version: VERSION });
+  }
 });
 
 /* ---------- Estrategias de respuesta ---------- */
