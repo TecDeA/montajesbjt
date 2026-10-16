@@ -10,6 +10,7 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
+  "launch_handler": { "client_mode": "navigate-existing" },
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "categories": ["education", "productivity", "utilities"],
