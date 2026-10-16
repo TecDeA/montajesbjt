@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="color-scheme" content="dark">
 <title>Calculadora de Polarización BJT</title>
 <meta name="description" content="Calculadora de polarización de transistores BJT: resolución paso a paso de los 15 montajes clásicos. Funciona sin conexión.">
 
@@ -29,6 +30,7 @@
 <script src="js/mathjax-tex-svg.js" id="MathJax-script" async></script>
 <style>
   :root {
+    color-scheme: dark;
     --bg-primary: #0f172a;
     --bg-secondary: #1e293b;
     --bg-card: rgba(30, 41, 59, 0.7);
@@ -50,16 +52,20 @@
     --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
   html, body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
     background: var(--gradient-bg);
     color: var(--text-primary);
     min-height: 100vh;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: contain;
   }
+
+  /* Navegación por teclado visible (escritorio) */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   /* Animated background blobs */
   body::before {
@@ -98,7 +104,9 @@
     z-index: 1;
     max-width: 1600px;
     margin: 0 auto;
-    padding: 1.5rem 2rem;
+    padding: 1.5rem 2rem 1rem;
+    /* Respeto de notch / barra de inicio (iOS standalone, Android) */
+    padding: calc(1.5rem + env(safe-area-inset-top, 0px)) max(2rem, env(safe-area-inset-right, 0px)) calc(1rem + env(safe-area-inset-bottom, 0px)) max(2rem, env(safe-area-inset-left, 0px));
   }
 
   /* Header */
@@ -130,7 +138,7 @@
   }
   .brand-icon svg { width: 32px; height: 32px; }
   .brand-text h1 {
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, 1rem + 1.8vw, 1.6rem);
     font-weight: 700;
     background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
     -webkit-background-clip: text;
@@ -143,6 +151,41 @@
     font-size: 0.9rem;
     margin-top: 0.15rem;
   }
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .version-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.18rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    line-height: 1.4;
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .version-chip::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+    flex-shrink: 0;
+  }
+  .version-chip[hidden] { display: none; }
   .header-info {
     display: flex;
     gap: 0.75rem;
@@ -166,8 +209,12 @@
     align-items: start;
   }
   @media (max-width: 1024px) {
-    .main-grid { grid-template-columns: 1fr; }
-    .app { padding: 1rem; }
+    .main-grid { grid-template-columns: 1fr; gap: 1rem; }
+    .app {
+      padding: 1rem;
+      padding: calc(0.75rem + env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) calc(0.75rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+    }
+    .sidebar.collapsed #circuit-list { display: none; }
   }
 
   /* Sidebar */
@@ -190,6 +237,31 @@
     margin-bottom: 0.85rem;
     font-weight: 600;
   }
+  .sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+  }
+  .sidebar-head h2 { margin-bottom: 0; }
+  .sidebar.collapsed .sidebar-head { margin-bottom: 0; }
+  .sidebar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.15s;
+  }
+  .sidebar-toggle:hover { background: rgba(148, 163, 184, 0.22); }
+  .sidebar-toggle svg { width: 16px; height: 16px; }
+  .sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
   .category {
     margin-bottom: 0.6rem;
     border: 1px solid var(--border);
@@ -315,7 +387,7 @@
     flex-wrap: wrap;
   }
   .card-title {
-    font-size: 1.4rem;
+    font-size: clamp(1.15rem, 1rem + 1vw, 1.4rem);
     font-weight: 700;
     letter-spacing: -0.01em;
   }
@@ -395,7 +467,7 @@
   }
   .variables-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
     gap: 0.85rem;
   }
   .variable-input {
@@ -559,7 +631,7 @@
   }
   .formulas-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: 0.6rem;
   }
   .formula-item {
@@ -781,7 +853,7 @@
   /* ===== Múltiples resultados ===== */
   .results-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
     gap: 0.75rem;
     margin-bottom: 1rem;
   }
@@ -991,7 +1063,7 @@
   /* Layout del modal de recta de carga */
   .loadline-layout {
     display: grid;
-    grid-template-columns: 1fr 320px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
     gap: 1.5rem;
     align-items: start;
   }
@@ -1150,6 +1222,65 @@
     margin-top: 0.15rem;
     font-family: 'JetBrains Mono', monospace;
   }
+
+  /* ===== Responsividad móvil y táctil ===== */
+  /* Móvil/tablet (≤1024 px): el selector de montajes es una barra
+     plegable pegajosa. Estas reglas van al final de la hoja para
+     ganar a las reglas base de .sidebar definidas más arriba. */
+  @media (max-width: 1024px) {
+    .sidebar {
+      position: sticky;
+      top: calc(0.5rem + env(safe-area-inset-top, 0px));
+      max-height: calc(100vh - 1.5rem);
+      z-index: 50;
+      padding: 0.9rem;
+    }
+    .sidebar-toggle { display: inline-flex; }
+  }
+  @media (max-width: 768px) {
+    header { padding: 0.75rem 0 1.25rem; margin-bottom: 1.5rem; }
+    .brand { gap: 0.75rem; }
+    .brand-icon { width: 44px; height: 44px; border-radius: 12px; }
+    .brand-icon svg { width: 26px; height: 26px; }
+    .header-info { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+    .card { padding: 1.1rem 1rem; border-radius: 14px; }
+    .card-header { margin-bottom: 1rem; }
+    .circuit-display { gap: 1rem; }
+    .circuit-image-wrap { padding: 0.6rem; }
+    .action-bar { gap: 0.6rem; }
+    .btn { padding: 0.75rem 1.1rem; }
+    .modal-overlay { padding: 0.75rem; }
+    .modal { max-height: 92vh; }
+    .modal-header { flex-wrap: wrap; }
+    .modal-body { padding: 1rem; }
+    footer { margin-top: 2rem; padding-top: 1.25rem; }
+  }
+  /* Táctil: objetivos cómodos (≥44 px) y sin zoom automático de iOS Safari */
+  @media (pointer: coarse) {
+    .var-input-row input { font-size: 16px; }
+    .var-unknown-btn { width: 34px; height: 34px; }
+    .circuit-item { min-height: 44px; padding: 0.7rem 0.85rem; }
+    .category-title { padding: 0.8rem 0.85rem; }
+    .ll-control input[type="range"]::-webkit-slider-thumb { width: 22px; height: 22px; }
+    .ll-control input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; }
+  }
+  /* Sin retardo ni zoom por doble toque en controles */
+  .btn, .circuit-item, .category-title, .exam-toggle, .var-unknown-btn,
+  .pwa-install, .modal-close, .sidebar-toggle { touch-action: manipulation; }
+  /* Móvil apaisado con poco alto: cabecera compacta */
+  @media (max-height: 480px) and (orientation: landscape) {
+    .brand-text p { display: none; }
+    .brand-icon { width: 40px; height: 40px; }
+    header { padding: 0.5rem 0 1rem; }
+  }
+  /* Accesibilidad: respetar "reducir animación" */
+  @media (prefers-reduced-motion: reduce) {
+    body::before, body::after { animation: none; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1164,7 +1295,10 @@
         </svg>
       </div>
       <div class="brand-text">
-        <h1>Calculadora de Polarización BJT</h1>
+        <div class="title-row">
+          <h1>Calculadora de Polarización BJT</h1>
+          <span class="version-chip" id="version-chip" hidden title="Versión de la aplicación, tomada del service worker"></span>
+        </div>
         <p>Resolución paso a paso de los 15 montajes clásicos de transistores bipolares</p>
       </div>
     </div>
@@ -1188,7 +1322,12 @@
   <div class="main-grid">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <h2>Selecciona el montaje</h2>
+      <div class="sidebar-head">
+        <h2>Selecciona el montaje</h2>
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-expanded="true" aria-controls="circuit-list" onclick="toggleSidebar()" title="Plegar o desplegar la lista de montajes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+        </button>
+      </div>
       <div id="circuit-list"></div>
     </aside>
 
@@ -2127,6 +2266,29 @@ function toggleCategory(idx) {
 }
 
 /* ============================================================
+   BARRA PLEGABLE DE MONTAJES (móvil)
+   En pantallas ≤1024 px el sidebar se comporta como una barra
+   pegajosa que se pliega/despliega para no empujar el contenido.
+   ============================================================ */
+function toggleSidebar() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  const collapsed = sb.classList.toggle('collapsed');
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.setAttribute('aria-expanded', String(!collapsed));
+}
+
+// Pliega el sidebar si la pantalla es pequeña (al cargar y al elegir montaje)
+function collapseSidebarOnMobile() {
+  if (!window.matchMedia('(max-width: 1024px)').matches) return;
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  sb.classList.add('collapsed');
+  const btn = document.getElementById('sidebar-toggle');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
+/* ============================================================
    SELECCIÓN DE CIRCUITO
    ============================================================ */
 function selectCircuit(id) {
@@ -2165,6 +2327,9 @@ function selectCircuit(id) {
   document.getElementById('result-panel').classList.remove('visible');
   document.getElementById('error-panel').classList.remove('visible');
   updateUnknownIndicator();
+
+  // En pantallas pequeñas, plegar el selector para que se vea el circuito
+  collapseSidebarOnMobile();
 }
 
 /* ============================================================
@@ -2185,8 +2350,10 @@ function renderVariables(c) {
           <span class="var-type-badge ${info.tipo}">${info.tipo === 'input' ? 'dato' : 'calc'}</span>
         </div>
         <div class="var-input-row">
-          <input type="text" inputmode="decimal" placeholder="${placeholderText}" data-var="${name}"
-                 onchange="onInputChange('${name}', this.value)" oninput="onInputChange('${name}', this.value)" />
+          <input type="text" inputmode="decimal" enterkeyhint="done" autocomplete="off"
+                 placeholder="${placeholderText}" data-var="${name}"
+                 onchange="onInputChange('${name}', this.value)" oninput="onInputChange('${name}', this.value)"
+                 onkeydown="onInputKey(event)" />
           <span class="var-unit">${shownUnit}</span>
           <button class="var-unknown-btn ${isUnknown ? 'active' : ''}" title="Marcar como incógnita"
                   onclick="toggleUnknown('${name}')">?</button>
@@ -2195,6 +2362,14 @@ function renderVariables(c) {
       </div>`;
   }
   grid.innerHTML = html;
+}
+
+/* Enter en un input = calcular (útil con la tecla "Listo" del teclado virtual) */
+function onInputKey(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btn-calcular').click();
+  }
 }
 
 // Devuelve la unidad a MOSTRAR al usuario (puede diferir de la interna).
@@ -3368,8 +3543,11 @@ function drawLoadLineChart(qVCE, qIC, vcc, icSat, vceSat, vceCutoff, isSaturated
   const cssW = 700, cssH = 500;
   canvas.width = cssW * dpr;
   canvas.height = cssH * dpr;
-  canvas.style.width = cssW + 'px';
-  canvas.style.height = cssH + 'px';
+  // Responsivo: el gráfico escala al ancho disponible (móvil) sin perder
+  // resolución de exportación; en escritorio se limita a su tamaño natural.
+  canvas.style.width = '100%';
+  canvas.style.maxWidth = cssW + 'px';
+  canvas.style.height = 'auto';
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   // Márgenes ampliados: izquierda más ancha para valores largos del eje Y
@@ -3646,6 +3824,8 @@ function drawDot(ctx, x, y, color, r = 6) {
    ============================================================ */
 window.addEventListener('DOMContentLoaded', () => {
   renderSidebar();
+  // Móvil: el selector de montajes arranca plegado para no empujar el contenido
+  collapseSidebarOnMobile();
   // PWA: atajos del manifiesto (?circuito=N abre ese montaje directamente)
   const params = new URLSearchParams(location.search);
   const cId = parseInt(params.get('circuito') || '0', 10);
@@ -3707,6 +3887,31 @@ if ('serviceWorker' in navigator) {
       })
       .catch((err) => console.warn('Service Worker no registrado:', err));
   });
+
+  /* ===== Chip dinámico de versión =====
+     La versión de la app vive únicamente en sw.js (const VERSION).
+     La página se la pide al service worker activo mediante un
+     MessageChannel, así el chip refleja siempre la versión real
+     en ejecución (y se refresca al activarse un SW nuevo). */
+  function pedirVersionSW() {
+    navigator.serviceWorker.ready.then((reg) => {
+      const sw = reg.active || navigator.serviceWorker.controller;
+      if (!sw) return;
+      const channel = new MessageChannel();
+      channel.port1.onmessage = (e) => {
+        if (!e.data || !e.data.version) return;
+        const chip = document.getElementById('version-chip');
+        if (!chip) return;
+        chip.textContent = e.data.version;
+        chip.hidden = false;
+      };
+      sw.postMessage({ type: 'GET_VERSION' }, [channel.port2]);
+    }).catch(() => {});
+  }
+
+  window.addEventListener('load', pedirVersionSW);
+  // Si un SW nuevo toma el control (SKIP_WAITING), refrescar el chip
+  navigator.serviceWorker.addEventListener('controllerchange', pedirVersionSW);
 }
 </script>
 </body>
