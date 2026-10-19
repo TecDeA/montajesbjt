@@ -3,7 +3,7 @@
    Estrategia: cache-first para el app shell y los recursos
    propios; red como respaldo y offline.html como último recurso.
    ============================================================ */
-const VERSION = 'v1.1.0';
+const VERSION = 'v1.2.0';
 const CACHE_NAME = 'calc-bjt-' + VERSION;
 
 /* App shell completo: HTML, manifiesto, MathJax local, iconos y
@@ -68,7 +68,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      // Filtrar por prefijo propio: caches.keys() es global al origen y
+      // sin este filtro se borraban las cachés del portal y demás apps.
+      keys.filter((k) => k.startsWith('calc-bjt-') && k !== CACHE_NAME).map((k) => caches.delete(k))
     );
     await self.clients.claim();
   })());
